@@ -1,0 +1,122 @@
+import java.util.Scanner;
+import java.util.Timer;
+import java.util.TimerTask;
+
+class QuizQuestion {
+    private String question;
+    private String[] options;
+    private int correctOptionIndex;
+
+    public QuizQuestion(String question, String[] options, int correctOptionIndex) {
+        this.question = question;
+        this.options = options;
+        this.correctOptionIndex = correctOptionIndex;
+    }
+
+    public String getQuestion() {
+        return question;
+    }
+
+    public String[] getOptions() {
+        return options;
+    }
+
+    public int getCorrectOptionIndex() {
+        return correctOptionIndex;
+    }
+}
+
+class Quiz {
+    private QuizQuestion[] questions;
+    private int currentQuestionIndex;
+    private int score;
+
+    public Quiz(QuizQuestion[] questions) {
+        this.questions = questions;
+        this.currentQuestionIndex = 0;
+        this.score = 0;
+    }
+
+    public void startQuiz() {
+        Scanner scanner = new Scanner(System.in);
+
+        for (QuizQuestion question : questions) {
+            displayQuestion(question);
+
+            // Set up timer for each question (10 seconds)
+            Timer timer = new Timer();
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    System.out.println("\nTime's up! Moving to the next question.");
+                    timer.cancel(); // Stop the timer
+                    evaluateAnswer(-1); // -1 indicates no user input within the time limit
+                }
+            }, 10000); // 10 seconds
+
+            // Get user input for the current question
+            System.out.print("Your answer (1-" + question.getOptions().length + "): ");
+            int userAnswer = scanner.nextInt();
+
+            // Stop the timer as soon as the user provides an answer
+            timer.cancel();
+
+            // Evaluate the user's answer
+            evaluateAnswer(userAnswer - 1); // Adjust index (user input is 1-based, options are 0-based)
+        }
+
+        displayResult();
+    }
+
+    private void displayQuestion(QuizQuestion question) {
+        System.out.println("\n" + question.getQuestion());
+        String[] options = question.getOptions();
+        for (int i = 0; i < options.length; i++) {
+            System.out.println((i + 1) + ". " + options[i]);
+        }
+    }
+
+    private void evaluateAnswer(int userAnswer) {
+        QuizQuestion currentQuestion = questions[currentQuestionIndex];
+        if (userAnswer == currentQuestion.getCorrectOptionIndex()) {
+            System.out.println("Correct!\n");
+            score++;
+        } else {
+            System.out.println("Incorrect. The correct answer is: " +
+                    (currentQuestion.getCorrectOptionIndex() + 1) + "\n");
+        }
+
+        currentQuestionIndex++;
+    }
+
+    private void displayResult() {
+        System.out.println("\nQuiz Completed!");
+        System.out.println("Your Score: " + score + "/" + questions.length);
+
+        System.out.println("\nSummary:");
+        for (int i = 0; i < questions.length; i++) {
+            QuizQuestion question = questions[i];
+            System.out.println("Q" + (i + 1) + ": " + question.getQuestion());
+            System.out.println("Your Answer: " + (scoredQuestions[i] + 1)); // Adjust index
+            System.out.println("Correct Answer: " + (question.getCorrectOptionIndex() + 1) + "\n");
+        }
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        // Define quiz questions
+        QuizQuestion[] quizQuestions = {
+                new QuizQuestion("What is the capital of France?", new String[]{"Berlin", "Paris", "Madrid"}, 1),
+                new QuizQuestion("Which planet is known as the Red Planet?", new String[]{"Mars", "Venus", "Jupiter"}, 0),
+                new QuizQuestion("What is the largest mammal?", new String[]{"Elephant", "Blue Whale", "Giraffe"}, 1)
+                // Add more questions as needed
+        };
+
+        // Create a Quiz instance with the defined questions
+        Quiz quiz = new Quiz(quizQuestions);
+
+        // Start the quiz
+        quiz.startQuiz();
+    }
+}
